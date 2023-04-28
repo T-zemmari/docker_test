@@ -1,0 +1,50 @@
+version: "3"
+services:
+
+  dbtestprod:
+    container_name: servidor_mysql_test
+    image: mysql:5.6
+    restart: always
+    expose:
+      - 3306
+    ports:
+      - 3391:3306
+    env_file:
+      - ./config/.env_db
+    volumes:
+      - ./volumenes/database:/var/lib/mysql
+
+
+  apache:
+    build: ./config/apache/
+    container_name: apache7133test
+    restart: always
+    # Para que funcione la siguiente linea, hay que ejecutar "export UID" en el terminal antes de docker-compose up -d
+    #user: "$UID"
+    volumes:
+      - ./volumenes/public_html:/var/www/html/
+      - ./config/apache/add/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./logs/apache:/var/log/apache2/
+    expose:
+      - 80
+      #- 443
+    ports:
+      - 94:80
+      #- 443:443
+    links:
+      - dbtestprod
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmintest
+    restart: always
+    env_file:
+      - ./config/.env_pma
+    expose:
+      - 80
+    ports:
+      - 93:80
+    depends_on:
+      - dbtestprod
+    links:
+      - dbtestprod
